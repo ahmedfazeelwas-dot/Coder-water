@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>White Black Notepad</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:white; font-family: monospace; height:100vh; display:flex; flex-direction:column; }
+.top { background:black; color:white; display:flex; justify-content:space-between; align-items:center; padding:12px 15px; }
+.top h1 { font-size:16px; font-weight:normal; }
+.top h1 span { color:#aaa; font-size:12px; }
+#runBtn { background:white; color:black; border:none; padding:8px 22px; border-radius:20px; font-size:14px; font-weight:bold; cursor:pointer; }
+#editor { flex:1; width:100%; border:none; outline:none; padding:20px; font-size:15px; line-height:1.6; background:white; color:black; resize:none; }
+#preview { flex:1; width:100%; border:none; display:none; background:white; }
+.tabs { display:flex; gap:8px; margin-top:10px; padding:0 15px; background:white; }
+.tab { padding:6px 14px; border-radius:15px; font-size:13px; cursor:pointer; border:1px solid black; background:white; color:black; }
+.tab.active { background:black; color:white; }
+.bottom { background:black; color:white; text-align:center; padding:8px; font-size:12px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>NOTEPAD <span>Auto Tag</span></h1>
+  <button id="runBtn" onclick="runCode()">Run ▶</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="codeTab" onclick="showCode()">Code</div>
+  <div class="tab" id="previewTab" onclick="runCode()">Preview</div>
+</div>
+
+<textarea id="editor" placeholder="Type <h1> and it will auto make </h1>"></textarea>
+<iframe id="preview"></iframe>
+
+<div class="bottom">Type <h1> - Auto </h1> Comes - Tap Run</div>
+
+<script>
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const codeTab = document.getElementById('codeTab');
+const previewTab = document.getElementById('previewTab');
+const runBtn = document.getElementById('runBtn');
+
+function runCode() {
+  preview.srcdoc = editor.value;
+  preview.style.display = 'block';
+  editor.style.display = 'none';
+  codeTab.classList.remove('active');
+  previewTab.classList.add('active');
+  runBtn.innerText = 'Edit ✏️';
+  runBtn.onclick = showCode;
+}
+function showCode() {
+  preview.style.display = 'none';
+  editor.style.display = 'block';
+  codeTab.classList.add('active');
+  previewTab.classList.remove('active');
+  runBtn.innerText = 'Run ▶';
+  runBtn.onclick = runCode;
+  editor.focus();
+}
+
+// AUTO CLOSE TAG FEATURE
+editor.addEventListener('keydown', function(e) {
+  if (e.key === '>') {
+    let pos = editor.selectionStart;
+    let textBefore = editor.value.substring(0, pos);
+    // find last <tag
+    let match = textBefore.match(/<([a-zA-Z][a-zA-Z0-9]*)\s*$/);
+    if (match) {
+      let tag = match[1];
+      // tags that don't need closing
+      let noClose = ['br','hr','img','input','meta','link'];
+      if (noClose.includes(tag.toLowerCase())) return;
+      
+      // let > type first, then add closing tag
+      setTimeout(() => {
+        let newPos = editor.selectionStart;
+        let before = editor.value.substring(0, newPos);
+        let after = editor.value.substring(newPos);
+        let closing = '</' + tag + '>';
+        editor.value = before + closing + after;
+        // put cursor in middle, between > and </
+        editor.selectionStart = newPos;
+        editor.selectionEnd = newPos;
+      }, 0);
+    }
+  }
+  
+  // Auto close bracket ( also
+  if (e.key === '(') {
+    setTimeout(() => {
+      let p = editor.selectionStart;
+      editor.value = editor.value.substring(0, p) + ')' + editor.value.substring(p);
+      editor.selectionStart = p;
+      editor.selectionEnd = p;
+    }, 0);
+  }
+});
+
+editor.focus();
+</script>
+</body>
+</html>
